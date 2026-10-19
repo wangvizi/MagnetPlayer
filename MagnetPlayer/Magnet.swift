@@ -70,7 +70,7 @@ struct MagnetLink {
         var value = 0
         var out = Data()
         for ch in s.uppercased() where !ch.isWhitespace {
-            guard let idx = alpha.firstIndex(of: UInt8(ascii: ch)) else { return nil }
+            guard let b = ch.asciiValue, let idx = alpha.firstIndex(of: b) else { return nil }
             value = (value << 5) | Int(idx)
             bits += 5
             if bits >= 8 {

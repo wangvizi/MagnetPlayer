@@ -40,7 +40,7 @@ final class APIClient {
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.timeoutInterval = 300
+        req.timeoutInterval = 3600
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let data: Data, resp: URLResponse

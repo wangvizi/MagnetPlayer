@@ -18,7 +18,7 @@ jobs:
           unzip -oq xcodegen.zip -d xcodegen-bin
           BIN=$(find xcodegen-bin -type f -name xcodegen | head -n 1)
           chmod +x "$BIN"
-          echo "$(dirname "$BIN")" >> "$GITHUB_PATH"
+          echo "$(cd "$(dirname "$BIN")" && pwd)" >> "$GITHUB_PATH"
 
       - name: Generate Xcode project
         working-directory: app

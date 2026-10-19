@@ -68,8 +68,13 @@ final class DHTClient {
     private func finish() {
         guard !finished else { return }
         finished = true
-        let peers = Array(Set(foundPeers))
-        onDone?(peers)
+        var seen = Set<String>()
+        var uniq: [(String, Int)] = []
+        for p in foundPeers {
+            let k = "\(p.0):\(p.1)"
+            if seen.insert(k).inserted { uniq.append(p) }
+        }
+        onDone?(uniq)
         onDone = nil
     }
 

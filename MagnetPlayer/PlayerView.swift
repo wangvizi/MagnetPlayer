@@ -6,6 +6,7 @@ struct PlayerView: View {
     @State private var player: AVPlayer
 
     init(url: URL) {
+        self.url = url
         _player = State(initialValue: AVPlayer(url: url))
     }
 

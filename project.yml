@@ -1,0 +1,31 @@
+name: MagnetPlayer
+options:
+  bundleIdPrefix: com.wangvizi
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    INFOPLIST_FILE: MagnetPlayer/Info.plist
+    PRODUCT_BUNDLE_IDENTIFIER: com.wangvizi.magnetplayer
+    PRODUCT_NAME: MagnetPlayer
+    ENABLE_BITCODE: "NO"
+    SWIFT_STRICT_CONCURRENCY: minimal
+targets:
+  MagnetPlayer:
+    type: application
+    platform: iOS
+    sources:
+      - path: MagnetPlayer
+        excludes:
+          - Info.plist
+schemes:
+  MagnetPlayer:
+    build:
+      targets:
+        MagnetPlayer: [all]
+    run:
+      config: Release

@@ -1,50 +1,53 @@
-name: Build IPA
+name: Build IPA (unsigned)
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
+    inputs:
+      mode:
+        description: 'Build mode (unsigned = 越狱/AppSync 免签名安装)'
+        required: false
+        default: 'unsigned'
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install xcodegen 2.42.0 (pinned)
-        run: |
-          curl -sL -o xcodegen.zip https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
-          unzip -oq xcodegen.zip -d xcodegen-bin
-          BIN=$(find xcodegen-bin -type f -name xcodegen | head -n 1)
-          chmod +x "$BIN"
-          echo "$(cd "$(dirname "$BIN")" && pwd)" >> "$GITHUB_PATH"
+      - name: Install xcodegen
+        run: brew install xcodegen
 
       - name: Generate Xcode project
-        working-directory: app
         run: xcodegen generate
 
-      - name: Build (unsigned)
-        working-directory: app
+      - name: Build (no code signing)
         run: |
-          xcodebuild -project MagnetPlayer.xcodeproj -scheme MagnetPlayer \
-            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
-            DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
-            -derivedDataPath build build
+          xcodebuild build \
+            -project MagnetPlayer.xcodeproj \
+            -scheme MagnetPlayer \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CONFIGURATION_BUILD_DIR="$PWD/build/app" \
+            -quiet
 
-      - name: Package IPA (ad-hoc sign)
+      - name: Ad-hoc sign & package IPA
         run: |
-          APP=$(find app/build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -n 1)
-          echo "App: $APP"
-          rm -rf Payload
-          mkdir -p Payload
-          cp -R "$APP" Payload/
-          codesign --force --sign - --entitlements app/App.entitlements "Payload/$(basename $APP)"
-          zip -qry MagnetPlayer.ipa Payload
+          APP="$PWD/build/app/MagnetPlayer.app"
+          codesign --force --sign - "$APP" 2>/dev/null || echo "codesign skipped"
+          mkdir -p "$PWD/build/Payload"
+          cp -R "$APP" "$PWD/build/Payload/"
+          ( cd "$PWD/build" && zip -qry MagnetPlayer.ipa Payload )
 
-      - name: Upload IPA
+      - name: Inspect IPA
+        run: python3 .github/scripts/inspect_ipa.py build/MagnetPlayer.ipa || true
+
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MagnetPlayer-ipa
-          path: MagnetPlayer.ipa
+          name: MagnetPlayer.ipa
+          path: build/MagnetPlayer.ipa

@@ -1,0 +1,9 @@
+services:
+  magnet:
+    build: .
+    container_name: magnet-stream
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

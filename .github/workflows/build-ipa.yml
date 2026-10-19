@@ -1,0 +1,50 @@
+name: Build IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install xcodegen 2.42.0 (pinned)
+        run: |
+          curl -sL -o xcodegen.zip https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          unzip -oq xcodegen.zip -d xcodegen-bin
+          BIN=$(find xcodegen-bin -type f -name xcodegen | head -n 1)
+          chmod +x "$BIN"
+          echo "$(dirname "$BIN")" >> "$GITHUB_PATH"
+
+      - name: Generate Xcode project
+        working-directory: app
+        run: xcodegen generate
+
+      - name: Build (unsigned)
+        working-directory: app
+        run: |
+          xcodebuild -project MagnetPlayer.xcodeproj -scheme MagnetPlayer \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+            -derivedDataPath build build
+
+      - name: Package IPA (ad-hoc sign)
+        run: |
+          APP=$(find app/build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -n 1)
+          echo "App: $APP"
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          codesign --force --sign - --entitlements app/App.entitlements "Payload/$(basename $APP)"
+          zip -qry MagnetPlayer.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: MagnetPlayer-ipa
+          path: MagnetPlayer.ipa

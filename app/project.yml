@@ -2,12 +2,12 @@ name: MagnetPlayer
 options:
   projectFormat: xcode15_3
   deploymentTarget:
-    iOS: "15.0"
+    iOS: "16.0"
 targets:
   MagnetPlayer:
     type: application
     platform: iOS
-    deploymentTarget: "15.0"
+    deploymentTarget: "16.0"
     sources:
       - Sources
     settings:
@@ -19,9 +19,3 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
     info:
       path: Info.plist
-      properties:
-        CFBundleDisplayName: 磁力播放器
-        UILaunchScreen: {}
-        NSAppTransportSecurity:
-          NSAllowsArbitraryLoads: true
-        NSLocalNetworkUsageDescription: 连接你的磁力转流服务器
